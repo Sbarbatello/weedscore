@@ -16,14 +16,14 @@ $$R(t) = \frac{100}{1 + e^{-0.5(t - 14)}}$$
 ### B. Clustering & Heat Logic
 * **Cluster Intensity ($C_i$):** $1 + \max(0, \frac{7 - IAT}{7})^2$ (where $IAT$ is days since previous session).
 * **Heat Pool ($H$):** Each session adds $+10$ units. Dissipates at $-1$ unit per day.
-* **Heat Multiplier:** $1 + (\text{current\_heat\_at\_session\_time} / 10)$.
+* **Heat Multiplier:** $1 + (\text{current heat at session time} / 10)$
 
 ### C. Frequency Debt ($D$)
 The total debt is the sum of all sessions in a 365-day rolling window:
-$$D = \sum (\text{BaseWeight} \times C_i \times \text{Heat\_Multiplier} \times \text{Solo\_Penalty} \times \text{Annual\_Decay})$$
+$$D = \sum (\text{BaseWeight} \times C_i \times \text{HeatMultiplier} \times \text{SoloMultiplier} \times \text{AnnualDecay})$$
 * **BaseWeight:** 10.0
 * **Solo Multiplier:** 1.5x session weight.
-* **Annual Decay ($L$):** $1 - (\text{days\_since\_event} / 365)$.
+* **Annual Decay ($L$):** $1 - (\text{days since event} / 365)$
 
 ### D. Final Metric ($W$)
 $$W = \text{round}\left(\frac{R(t)}{1 + D}, 2\right)$$
