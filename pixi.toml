@@ -1,0 +1,23 @@
+[project]
+name = "weedscore"
+version = "0.1.0"
+description = "Cannabis regulation control system"
+authors = ["Your Name"]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-64", "win-64"]
+
+[dependencies]
+python = ">=3.11"
+numpy = "*"
+pandas = "*"
+sqlalchemy = "*"
+psycopg2 = "*"
+streamlit = "*"
+plotly = "*"
+pytest = "*"
+python-dotenv = "*"
+
+[tasks]
+dev = "streamlit run src/dashboard/app.py"
+test = "pytest tests/"
+seed = "python scripts/seed_db.py"
