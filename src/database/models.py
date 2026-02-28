@@ -13,8 +13,8 @@ class Session(Base):
 
     id = Column(Integer, primary_key=True)
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
-    is_solo = Column(Boolean, nullable=False)
-    is_special_occasion = Column(Boolean, nullable=False)
+    is_solo = Column(Boolean, nullable=False, default=False)
+    is_special_occasion = Column(Boolean, nullable=False, default=False)
     notes = Column(String)
 
     def __repr__(self):
