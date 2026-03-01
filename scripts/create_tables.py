@@ -17,8 +17,9 @@ def create_tables():
     """
     try:
         engine = get_engine()
+        Base.metadata.drop_all(engine)
         Base.metadata.create_all(engine)
-        print("Table created successfully!")
+        print("Existing tables dropped and new schema deployed successfully.")
     except Exception as e:
         print(f"Error creating tables: {e}")
 
