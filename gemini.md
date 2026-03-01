@@ -41,7 +41,7 @@ $$W = \text{round}\left(\frac{R(t)}{1 + D}, 2\right)$$
 
 ## 5. Development Roadmap
 ### Phase 1: Scaffolding
-* **Ticket 1.1 [ACTIVE]:** initialize the project structure as defined in the proposed structure:
+* **Ticket 1.1 [DONE] (2026-02-23):** initialize the project structure as defined in the proposed structure:
 weedscore/
 ├── .env                 # Secret DB credentials (NEON_URL)
 ├── gemini.md            # The "Source of Truth"
@@ -65,3 +65,32 @@ weedscore/
 └── scripts/             # One-off scripts
     └── seed_db.py       # Data injection script
 
+* **Ticket 1.2 [DONE] (2026-02-28):** Database Initialisation:
+Update src/database/models.py: Ensure the is_solo and is_special_occasion columns have default=False in their definitions.
+
+Create scripts/create_tables.py: This script must:
+
+Import Base from models.py and get_engine from connection.py.
+
+Use Base.metadata.create_all(engine) to physically create the sessions table in the Neon database.
+
+Include a try/except block to catch connection errors and print 'Table created successfully!' on success.
+
+Command: Provide the exact pixi command to execute this script.
+
+## Current Status (2026-02-28)
+- Completed Ticket 1.2.
+- Updated `src/database/models.py` with `default=False`.
+- Created `scripts/create_tables.py`.
+- Next Step: Verify table creation in Neon and start Ticket 1.3 (Data Ingestion).
+
+-----------------------------------
+-----------------------------------
+
+Things I've learned in this project:
+
+  Summary of Best Practices for working with DBs:
+   1. Tables: Keep them as Classes in models.py.
+   2. Logic: Use the Session (the db object in our code) to read/write. It handles the "Commit" and "Close" for you.
+   3. Complex SQL: If it's too hard for SQLAlchemy (like a 50-line recursive CTE), just use db.execute(text("YOUR RAW SQL")). SQLAlchemy
+      doesn't stop you from using raw SQL; it just makes the easy stuff even easier.
