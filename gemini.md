@@ -5,29 +5,7 @@
 **Objective:** Maintain a target frequency of ~30 sessions per year by providing a dynamic "deserve" metric ($W$) ranging from 0 to 100.
 
 ## 2. Mathematical Specification (Immutable)
-The following formulas are the "source of truth." Do not deviate from these logic implementations:
-
-### A. Short-Term Recovery ($R$)
-$$R(t) = \frac{100}{1 + e^{-0.5(t - 14)}}$$
-* **$t$**: Days since last session.
-* **$t_0 = 14$**: Midpoint of recovery.
-* **$k = 0.5$**: Growth steepness.
-
-### B. Clustering & Heat Logic
-* **Cluster Intensity ($C_i$):** $1 + \max(0, \frac{7 - IAT}{7})^2$ (where $IAT$ is days since previous session).
-* **Heat Pool ($H$):** Each session adds $+10$ units. Dissipates at $-1$ unit per day.
-* **Heat Multiplier:** $1 + (\text{current heat at session time} / 10)$
-
-### C. Frequency Debt ($D$)
-The total debt is the sum of all sessions in a 365-day rolling window:
-$$D = \sum (\text{BaseWeight} \times C_i \times \text{HeatMultiplier} \times \text{SoloMultiplier} \times \text{AnnualDecay})$$
-* **BaseWeight:** 10.0
-* **Solo Multiplier:** 1.5x session weight.
-* **Annual Decay ($L$):** $1 - (\text{days since event} / 365)$
-
-### D. Final Metric ($W$)
-$$W = \text{round}\left(\frac{R(t)}{1 + D}, 2\right)$$
-* **Occasion Boost:** If toggled, $W = W \times 1.5$ (capped at 100).
+Defined in `aux/weedscore_calcs.md`
 
 ## 3. Tech Stack
 * **Environment:** Pixi (refer to `pixi.toml`).
@@ -78,11 +56,39 @@ Include a try/except block to catch connection errors and print 'Table created s
 
 Command: Provide the exact pixi command to execute this script.
 
-## Current Status (2026-02-28)
-- Completed Ticket 1.2.
-- Updated `src/database/models.py` with `default=False`.
-- Created `scripts/create_tables.py`.
-- Next Step: Verify table creation in Neon and start Ticket 1.3 (Data Ingestion).
+### Phase 2: Simulation & Engine
+* **Ticket 2.1 [DONE] (2026-03-29):** Synthetic Data Seeder (`scripts/seed_db.py`)
+    - **Purpose:** Create a reproducible 'sandpit' environment to validate mathematical logic against diverse user behaviours.
+    - **Scenarios (Temporal Logic):** 1. **The Moderator:** 4 sessions spaced exactly 14 days apart.
+        2. **The Bender:** 4 sessions within a 72-hour window.
+        3. **The Sabbatical:** 1 session exactly 45 days ago.
+    - **Outcome:** Script supports isolation via `--scenario` and ensures a clean DB state via `TRUNCATE`.
+
+* **Ticket 2.2 [DONE] (2026-03-29):** Logic Engine Implementation (`src/engine/calculator.py`).
+    - **Purpose:** Core mathematical engine for Weedscore.
+    - **Outcome:** Implemented `WeedScoreCalculator` using the specification from `aux/weedscore_calcs.md`. Includes Heat integration, Cluster Intensity, and Sigmoid Recovery.
+    - **Validation:** Added a CLI entry point to verify score calculation against live DB data.
+
+* **Ticket 2.2b [DONE] (2026-03-29):** Validation & Testing (`tests/test_engine.py`)
+    - **Purpose:** Empirically verify the mathematical engine against high-signal scenarios.
+    - **Seeds Updated:**
+        - **The Moderator:** 4 sessions, spaced 12 days apart, most recent 21 days ago.
+        - **The Sabbatical:** 1 session 60 days ago.
+        - **The Clean Slate:** 0 sessions (ceiling test).
+    - **Outcomes:** 
+        - Fixed Heat Multiplier formula to $1 + H/10$ as per spec.
+        - Tuned `SENSITIVITY_K` to **1000.0** to allow for more nuanced recovery for moderate users.
+    - **Tests:**
+        - Midpoint Sigmoid Check (R(14)=50).
+        - Clean Slate Check (W=100.0).
+        - Moderator Sensitivity Evaluation (W > 50.0 after 21 days).
+
+## Last Status (2026-03-29)
+- Completed Ticket 2.2b.
+- Refined the mathematical engine and validated it against the requested scenarios.
+- Fixed a bug in the heat penalty calculation.
+- Tuned sensitivity constant to ensure moderate use is rewarded after sufficient recovery.
+- Next Step: Ticket 2.3 (Streamlit Dashboard Implementation).
 
 -----------------------------------
 -----------------------------------
