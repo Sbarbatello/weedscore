@@ -18,6 +18,8 @@ pytest = "*"
 python-dotenv = "*"
 
 [tasks]
-dev = "streamlit run src/dashboard/app.py"
+dev = "PYTHONPATH=. streamlit run src/dashboard/app.py"
 test = "pytest tests/"
-seed = "python scripts/seed_db.py"
+seed = "PYTHONPATH=. python scripts/seed_db.py"
+create_db = "PYTHONPATH=. python scripts/create_tables.py"
+test_db = "PYTHONPATH=. python scripts/test_connection.py"

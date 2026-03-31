@@ -5,8 +5,9 @@ Database connection handling for the Weedscore application.
 import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 from typing import Generator
+from contextlib import contextmanager
 
 def get_engine():
     """
@@ -25,7 +26,8 @@ def get_engine():
     engine = create_engine(neon_url)
     return engine
 
-def get_session() -> Generator:
+@contextmanager
+def get_session() -> Generator[Session, None, None]:
     """
     Yields a SQLAlchemy session from the engine.
     """
