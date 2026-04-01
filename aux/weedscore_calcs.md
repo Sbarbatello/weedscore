@@ -122,13 +122,13 @@ These control how severely the system punishes "back-to-back" sessions or streak
 
 ## 3. Systemic "Heat" Parameters ($H$)
 
-This simulates "momentum" or a "bender" by tracking recent volume.
+This simulates "momentum" by tracking recent volume. To keep the system balanced across different user goals, heat dissipation is tied to the Target Frequency ($N$).
 
-- **Heat Accumulation:** Set to **+10.0 units** per session. This is the "cost" added to the internal heat state every time you smoke.
-    
-- **Heat Dissipation:** Set to **-1.0 unit per day**. This is the rate at which the "environmental penalty" cools down during abstinence.
-    
-- **Heat Scaling:** Currently implemented as `current_heat / 10.0`. This means every 10 units of heat adds a 1.0x multiplier to the next session's debt.
+- **Heat Accumulation:** Fixed at **+10.0 units** per session (The Anchor).
+- **Heat Dissipation (Dynamic):** Calculated as $D = 10.0 / (365 / N)$. 
+    - *Logic:* In a "Perfect Moderator" scenario, the heat from one session must be fully dissipated by the time the next target session occurs.
+- **Heat Multiplier ($H_i$ / The Saturation Cap):** - Formula: $H_i = \min(5.0, 1.0 + (\text{current\_heat} / 10.0))$
+    - *Logic:* We clamp the penalty at **5.0x**. This prevents "Debt Explosion" and ensures that $K$ can effectively scale the score.
     
 
 ## 4. Long-Term Debt & Weighting ($D$)
@@ -151,3 +151,37 @@ This controls the final output range.
 - **Sensitivity Constant ($K$):** Set to **150.0**. This is the most powerful "global" knob; it scales the total debt to ensure the final score stays meaningful for a target of ~30 sessions per year.
     
 - **Special Occasion Boost:** Set to **1.5**. A multiplier applied to the _final_ score to bypass restrictions for holidays or events.
+
+## 6. The Calibration & Mapping Framework
+
+To allow for a personalized dashboard, we distinguish between **User Inputs** (intent) and **Formula Parameters** (mechanics).
+
+#### A. The Parameter Mapping Table
+
+| User Input | Formula Parameter | Mapping Logic |
+| :--- | :--- | :--- |
+| **Target Frequency ($N$)** | **Sensitivity ($K$)** | Derived: $K = f(N)$ via Grid Search. |
+| **Target Frequency ($N$)** | **Dissipation ($D$)** | Derived: $10 / (365/N)$. |
+| **Recovery Patience** | **Midpoint ($t_0$)** | Baseline: $365/N$, modified by slider. |
+| **Bender Strictness** | **Penalty Power ($P$)** | Direct Slider (1.0 to 3.0). |
+
+#### B. The Optimization Objective (The "Loss Function")
+
+We aim to minimize the difference between the calculated score and these **Golden Benchmarks**:
+
+- **Perfect Moderator:** 1 session every $365/N$ days. (Last session: 1 day before the next). **Target: 85.**
+    
+- **The Bender:** 5 sessions in 3 days. (Evaluation: 10 days of abstinence). **Target: 15.**
+    
+- **The Weekend Warrior:** 2 sessions every weekend. (Evaluation: Mid-week). **Target: 45.**
+    
+- **Disciplined User:** 10 total sessions in a year. (Evaluation: 25 days since last). **Target: 100.**
+    
+
+#### C. The Dynamic Sensitivity Equation
+
+Because Frequency Debt ($D$) is cumulative, $K$ is the "Measuring Stick." We must find the coefficient $C$ such that:
+
+$$K = C \cdot N$$
+
+This ensures that a user seeking $N=50$ and a user seeking $N=10$ both feel the same "pressure" relative to their individual goals.

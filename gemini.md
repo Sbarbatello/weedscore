@@ -83,12 +83,27 @@ Command: Provide the exact pixi command to execute this script.
         - Clean Slate Check (W=100.0).
         - Moderator Sensitivity Evaluation (W > 50.0 after 21 days).
 
+* **Ticket 2.3 [ACTIVE]: Parameter Optimization & Calibration**
+    - **Goal:** Find the mapping $N \rightarrow K$ using Grid Search.
+    - **Key Fixes:** 1. Implement **Heat Clamping** (Max 5.0x) to prevent calculation stalls.
+        2. Link **Heat Dissipation** to $N$ to maintain "Natural Balance."
+        3. Use **Stateless Simulation** (in-memory lists) to avoid DB pollution during loops.
+    - **Search Space:** $K \in [500, 10000]$, $P \in [1.0, 3.0]$.
+
+* **Ticket 2.3 [DONE] (2026-03-29):** Parameter Optimization & Calibration
+    - **Purpose:** Find the mathematical "sweet spot" for different target frequencies (N).
+    - **Outcome:** Refactored `calculator.py` to be fully injectable. Built `scripts/optimize_params.py` for grid search.
+    - **Calibration Findings:**
+        - **K_SIGMOID:** Lowered to **0.2** for a smoother, more realistic recovery curve.
+        - **T_THRESHOLD:** Reduced to **3.5 days** to prevent debt explosion in moderate users.
+        - **K Equation:** Recommended $K \approx 500 \times N$ to keep scores normalized across goals.
+        - **Heat Cap:** Implemented a $5.0x$ cap on the heat multiplier to prevent total score lockout.
+
 ## Last Status (2026-03-29)
-- Completed Ticket 2.2b.
-- Refined the mathematical engine and validated it against the requested scenarios.
-- Fixed a bug in the heat penalty calculation.
-- Tuned sensitivity constant to ensure moderate use is rewarded after sufficient recovery.
-- Next Step: Ticket 2.3 (Streamlit Dashboard Implementation).
+- Completed Ticket 2.3.
+- Refined the mathematical engine defaults based on grid search over 20, 30, and 50 sessions/year scenarios.
+- Verified that the "Perfect Moderator" scenario now recovers to ~85.0 after a recovery window.
+- Next Step: Ticket 2.4 (Streamlit Dashboard Implementation).
 
 -----------------------------------
 -----------------------------------
