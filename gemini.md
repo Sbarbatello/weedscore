@@ -83,27 +83,47 @@ Command: Provide the exact pixi command to execute this script.
         - Clean Slate Check (W=100.0).
         - Moderator Sensitivity Evaluation (W > 50.0 after 21 days).
 
-* **Ticket 2.3 [ACTIVE]: Parameter Optimization & Calibration**
+* **Ticket 2.3 [DONE]: Parameter Optimization & Calibration**
     - **Goal:** Find the mapping $N \rightarrow K$ using Grid Search.
     - **Key Fixes:** 1. Implement **Heat Clamping** (Max 5.0x) to prevent calculation stalls.
         2. Link **Heat Dissipation** to $N$ to maintain "Natural Balance."
         3. Use **Stateless Simulation** (in-memory lists) to avoid DB pollution during loops.
     - **Search Space:** $K \in [500, 10000]$, $P \in [1.0, 3.0]$.
 
-* **Ticket 2.3 [DONE] (2026-03-29):** Parameter Optimization & Calibration
+* **Ticket 2.3 [DONE] (2026-03-30):** Parameter Optimization & Calibration
     - **Purpose:** Find the mathematical "sweet spot" for different target frequencies (N).
-    - **Outcome:** Refactored `calculator.py` to be fully injectable. Built `scripts/optimize_params.py` for grid search.
+    - **Outcome:** Refactored `calculator.py` to be fully injectable and parameterized. Built `src/engine/mapping.py` to handle calibration logic including Patience and Strictness.
     - **Calibration Findings:**
-        - **K_SIGMOID:** Lowered to **0.2** for a smoother, more realistic recovery curve.
-        - **T_THRESHOLD:** Reduced to **3.5 days** to prevent debt explosion in moderate users.
-        - **K Equation:** Recommended $K \approx 500 \times N$ to keep scores normalized across goals.
-        - **Heat Cap:** Implemented a $5.0x$ cap on the heat multiplier to prevent total score lockout.
+        - **K_SIGMOID:** Set to **0.5** for a responsive recovery curve.
+        - **T_THRESHOLD:** Reduced to **3.5 days**.
+        - **t0 (Recency):** Calibrated to **0.5 × (365/N) * Patience**.
+        - **K Equation:** Recommended $K \approx 183.3 \times N$.
+        - **Heat Cap:** Implemented a $5.0x$ cap on the heat multiplier.
+    - **Audit & Refactor:**
+        - Implemented **Singleton Engine** in `connection.py` for connection pooling.
+        - Parameterized `ANNUAL_WINDOW` and `HEAT_CAP` in `calculator.py`.
+        - Added `pydantic` for future configuration validation.
 
-## Last Status (2026-03-29)
-- Completed Ticket 2.3.
-- Refined the mathematical engine defaults based on grid search over 20, 30, and 50 sessions/year scenarios.
-- Verified that the "Perfect Moderator" scenario now recovers to ~85.0 after a recovery window.
-- Next Step: Ticket 2.4 (Streamlit Dashboard Implementation).
+* **Ticket 2.4 [DONE] (2026-04-01):** Streamlit Dashboard Implementation
+  * **Objective:** Build a mobile-first UI using Streamlit.
+  * **Outcome:** Implemented a three-screen architecture (Main, Record, Settings).
+  * **Key Features:** 
+    * **Main Screen:** RAG-colored score visualization (0-50 Red, 50-75 Amber, 75-100 Green).
+    * **Record Screen:** Live "Projected Score" preview using uncommitted DB sessions.
+    * **Settings:** JSON-backed persistence (`config/preferences.json`) with Pydantic validation.
+    * **Sync:** Shared session state keys for toggles across screens.
+
+### Phase 3: Stabilization & Polish
+* **Ticket 3.1 [TODO]:** Comprehensive Test Coverage
+    - **Goal:** Update `tests/test_engine.py` to use `UserPreferences` and cover the new mapping logic.
+* **Ticket 3.2 [TODO]:** UX Polish
+    - **Goal:** Add Plotly visualizations for historical score trends on the main dashboard.
+
+## Last Status (2026-04-01)
+- Phase 2 (Simulation & Engine) is officially COMPLETE.
+- The Streamlit Dashboard is fully functional and supports session logging with live previews.
+- Parameter optimization has been baked into the mapping layer ($C=183.3, k_{sigmoid}=0.5$).
+- The system is now a robust "NAI standard" pipeline: User Input -> Pydantic Schema -> Mapping Layer -> Calculator.
 
 -----------------------------------
 -----------------------------------
