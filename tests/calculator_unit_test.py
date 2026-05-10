@@ -5,9 +5,11 @@ Loads scenarios from CSV files and validates the score.
 
 import csv
 import argparse
-from datetime import datetime, timezone
-from typing import List
+from datetime import datetime, timezone, timedelta
+from typing import List, Optional
 from src.engine.calculator import WeedScoreCalculator
+from src.engine.mapping import get_calculator_params
+from src.engine.models import UserPreferences
 from src.database.models import Session as DBSession
 
 def load_sessions_from_csv(file_path: str) -> List[DBSession]:
@@ -27,16 +29,24 @@ def load_sessions_from_csv(file_path: str) -> List[DBSession]:
             ))
     return sessions
 
-def run_test(csv_path: str, evaluation_time: str = None, days_since_last: float = None) -> None:
+def run_test(
+    csv_path: str, 
+    evaluation_time: Optional[str] = None, 
+    days_since_last: Optional[float] = None,
+    target_frequency: int = 30
+) -> None:
     """
     Runs the calculation for a given CSV dataset.
     """
     sessions = load_sessions_from_csv(csv_path)
+    if not sessions:
+        print("Error: No sessions found in CSV.")
+        return
+        
     last_session_ts = sessions[-1].timestamp
     
     # Priority: 1. days_since_last, 2. evaluation_time, 3. default (12d)
     if days_since_last is not None:
-        from datetime import timedelta
         eval_dt = last_session_ts + timedelta(days=days_since_last)
     elif evaluation_time == "now":
         eval_dt = datetime.now(timezone.utc)
@@ -44,10 +54,13 @@ def run_test(csv_path: str, evaluation_time: str = None, days_since_last: float 
         eval_dt = datetime.fromisoformat(evaluation_time)
     else:
         # Default to exactly 12 days after the last session in the CSV
-        from datetime import timedelta
         eval_dt = last_session_ts + timedelta(days=12)
 
-    calc = WeedScoreCalculator(db=None) # No DB needed for isolated logic
+    # Use specified or default target frequency
+    prefs = UserPreferences(target_frequency=target_frequency)
+    params = get_calculator_params(prefs)
+    
+    calc = WeedScoreCalculator(db=None, **params) # No DB needed for isolated logic
     score = calc.calculate_score(sessions, eval_dt)
     
     # Calculate days since last session for reporting
@@ -55,6 +68,7 @@ def run_test(csv_path: str, evaluation_time: str = None, days_since_last: float 
     
     print(f"--- Unit Test Report ---")
     print(f"Dataset: {csv_path}")
+    print(f"Target Frequency (N): {target_frequency}")
     print(f"Last Session Time: {last_session_ts}")
     print(f"Evaluation Time: {eval_dt}")
     print(f"Time Since Last Session: {diff_days:.2f} days")
@@ -67,6 +81,7 @@ if __name__ == "__main__":
     parser.add_argument("--csv", type=str, required=True, help="Path to the CSV dataset.")
     parser.add_argument("--eval_time", type=str, help="ISO timestamp for evaluation (optional).")
     parser.add_argument("--days_since_last", type=float, help="Days since the last recorded session (optional).")
+    parser.add_argument("--n", type=int, default=30, help="Target frequency (default: 30).")
     
     args = parser.parse_args()
-    run_test(args.csv, args.eval_time, args.days_since_last)
+    run_test(args.csv, args.eval_time, args.days_since_last, args.n)

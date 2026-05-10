@@ -7,19 +7,23 @@ channels = ["conda-forge"]
 platforms = ["linux-64", "osx-64", "win-64"]
 
 [dependencies]
-python = ">=3.11"
+python = "3.12.*"
 numpy = "*"
-pandas = "*"
+pandas = "2.2.*"
 sqlalchemy = "*"
 psycopg2 = "*"
-streamlit = "*"
+streamlit = ">=1.35.0"
 plotly = "*"
 pytest = "*"
 python-dotenv = "*"
+pydantic = "*"
+playwright = ">=1.58.2,<2"
+pytest-playwright = ">=0.7.2,<0.8"
 
 [tasks]
-dev = "PYTHONPATH=. streamlit run src/dashboard/app.py"
-test = "pytest tests/"
+dev = "PYTHONPATH=. PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python streamlit run src/dashboard/app.py --browser.gatherUsageStats=false --server.runOnSave=true"
+test = "PYTHONPATH=. pytest tests/"
+e2e = "PYTHONPATH=. pytest tests/e2e/"
 seed = "PYTHONPATH=. python scripts/seed_db.py"
 create_db = "PYTHONPATH=. python scripts/create_tables.py"
 test_db = "PYTHONPATH=. python scripts/test_connection.py"
