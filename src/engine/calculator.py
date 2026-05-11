@@ -110,7 +110,10 @@ class WeedScoreCalculator:
                 current_heat = max(0.0, current_heat - (iat * self.heat_dissipation))
 
             # Ci: Cluster Intensity Factor
-            ci = 1.0 + max(0.0, (self.t_threshold - iat) / self.t_threshold) ** self.p_power
+            # If IAT < threshold, the term is between 0 and 1.
+            # Using (1 + term)^P ensures higher P = higher penalty.
+            term = max(0.0, (self.t_threshold - iat) / self.t_threshold)
+            ci = (1.0 + term) ** self.p_power
 
             # Hi: Heat Multiplier (Clamped)
             hi = min(self.heat_cap, 1.0 + (current_heat / self.heat_accumulation))

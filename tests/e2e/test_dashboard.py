@@ -8,6 +8,7 @@ URL = "http://localhost:8501"
 @pytest.fixture(scope="function", autouse=True)
 def before_each(page: Page):
     """Ensure we start at the home page before every test."""
+    page.set_viewport_size({"width": 1280, "height": 720})
     page.goto(URL)
     # Streamlit apps can take a second to boot the first time
     expect(page.get_by_text("Weedscore", exact=True)).to_be_visible(timeout=15000)
@@ -24,14 +25,15 @@ def test_main_dashboard_rag_visuals(page: Page):
 
 def test_state_synchronization_toggles(page: Page):
     """Scenario 2: Verify toggles stay synced across screens via session_state."""
-    # Streamlit hides the real checkbox input. We use force=True to click the label/container.
-    page.get_by_label("Is Solo?").click(force=True)
+    # Target the visible text label instead of the hidden input
+    page.get_by_text("Is Solo?").click()
     
     # Navigate to Record Screen
     page.get_by_role("button", name="🌿 Log New Session").click()
     
     # Verify 'Is Solo' is still toggled ON
-    expect(page.get_by_label("Is Solo?")).to_be_checked()
+    # For Streamlit toggles, checking the 'aria-checked' attribute is more reliable
+    expect(page.get_by_label("Is Solo?")).to_have_attribute("aria-checked", "true")
 
 def test_record_session_live_preview_math(page: Page):
     """Scenario 1: Verify the Projected Score updates dynamically when toggles change."""
@@ -41,8 +43,8 @@ def test_record_session_live_preview_math(page: Page):
     projected_metric = page.locator("[data-testid='stMetricValue']").first
     initial_score = projected_metric.inner_text()
     
-    # Toggle 'Is Solo' (should change the score)
-    page.get_by_label("Is Solo?").click(force=True)
+    # Toggle 'Special Occasion?' (should change the score significantly via the final multiplier)
+    page.get_by_text("Special Occasion?").click()
     
     # Verify score changed without a page reload
     expect(projected_metric).not_to_have_text(initial_score)

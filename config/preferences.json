@@ -1,0 +1,5 @@
+{
+    "target_frequency": 50,
+    "patience_factor": 0.5,
+    "strictness": 2.4
+}

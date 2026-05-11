@@ -209,26 +209,28 @@ def show_settings_screen():
     p_field = fields['patience_factor']
     p_ge = get_constraint(p_field, 'ge')
     p_le = get_constraint(p_field, 'le')
+    # Tech Info: Scales t0. 0.5 means recovery midpoint is halfway through your target interval.
     p_val = st.slider(
         "Recovery Patience",
         min_value=float(p_ge) if p_ge is not None else 0.1,
         max_value=float(p_le) if p_le is not None else 1.0,
         value=prefs.patience_factor,
         step=0.05,
-        help="Scales t0. 0.5 means recovery midpoint is halfway through your target interval."
+        help="Controls how long you must wait for your score to bounce back. Increase this to enforce longer, more disciplined breaks."
     )
     
     # Strictness (P)
     s_field = fields['strictness']
     s_ge = get_constraint(s_field, 'ge')
     s_le = get_constraint(s_field, 'le')
+    # Tech Info: Scales the clustering penalty (P power).
     s_val = st.slider(
         "Bender Strictness",
         min_value=float(s_ge) if s_ge is not None else 1.0,
         max_value=float(s_le) if s_le is not None else 5.0,
         value=prefs.strictness,
         step=0.1,
-        help="Scales the clustering penalty (P power)."
+        help="Determines the penalty for back-to-back sessions. Increase this to make 'streaks' or 'benders' much more expensive."
     )
     
     if st.button("💾 Save Settings", use_container_width=True):
