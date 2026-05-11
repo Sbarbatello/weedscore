@@ -25,7 +25,8 @@ def test_main_dashboard_rag_visuals(page: Page):
 def test_state_synchronization_toggles(page: Page):
     """Scenario 2: Verify toggles stay synced across screens via session_state."""
     # Streamlit hides the real checkbox input. We use force=True to click the label/container.
-    page.get_by_label("Is Solo?").click(force=True)
+    # Ensure the toggle is visible before clicking
+    page.locator("label:has-text(\"Is Solo?\")").click()
     
     # Navigate to Record Screen
     page.get_by_role("button", name="🌿 Log New Session").click()
@@ -42,10 +43,11 @@ def test_record_session_live_preview_math(page: Page):
     initial_score = projected_metric.inner_text()
     
     # Toggle 'Is Solo' (should change the score)
-    page.get_by_label("Is Solo?").click(force=True)
+    # Ensure the toggle is visible before clicking
+    page.locator("label:has-text(\"Is Solo?\")").click()
     
     # Verify score changed without a page reload
-    expect(projected_metric).not_to_have_text(initial_score)
+    expect(projected_metric).not_to_have_text(initial_score, timeout=5000)
     
     # Log the session
     page.get_by_role("button", name="✅ CONFIRM SESSION").click()
